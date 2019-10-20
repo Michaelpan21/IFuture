@@ -41,52 +41,54 @@ public class FileFinder {
 
         if (pathList.size() == 0) throw new IllegalArgumentException("No files to search");
 
-        String[] textWords = text.split(" ");
+        char[] textChars = text.toCharArray();
 
         List<Path> filesWithMatches = new ArrayList<>();
 
         pathList.forEach(path -> {
             try (BufferedReader bf = new BufferedReader(new FileReader(path.toString()))) {
 
-                int matchCounter = 0;
-                boolean isMatch = false;
-                int itr = 0;
                 String fileLine;
+                int itr = 0;
+                boolean toAdd = false;
 
                 while ((fileLine = bf.readLine()) != null) {
 
-                    String[] fileWords = fileLine.split(" ");
+                    char[] fileChars = fileLine.toCharArray();
+                    for (int i = 0; i < fileChars.length; i++) {
 
-                    for (int i = 0; i < fileWords.length; i++) {
+                        if (fileChars[i] == textChars[itr]) {
 
-                        if (fileWords[i].equals(textWords[itr])) {
+                            itr++;
+                            for (int j = i + 1; j < fileChars.length; j++) {
 
-                            matchCounter++;
-
-                            for (int j = i + 1; j < fileWords.length; j++) {
-                                if (fileWords[j].equals(textWords[itr])) {
-                                    matchCounter++;
-                                }
-                                else{
-                                    matchCounter = 0;
+                                if (fileChars[j] != textChars[itr]) {
                                     itr = 0;
                                     break;
                                 }
-                                /*if (j == fileWords.length - 1 && j != textWords.length - 1 && matchCounter != 0) {
-                                    isMatch = true;
-                                }*/
-                                if (matchCounter == textWords.length) {
-                                    isMatch = true; System.out.println(fileLine);
+
+                                if (itr == textChars.length - 1) {
+                                    i = fileChars.length - 1;
+                                    itr = 0;
+                                    toAdd = true;
                                     break;
                                 }
 
+                                if (j == fileChars.length - 1) {
+                                    i = fileChars.length - 1;
+                                    itr++;
+                                    break;
+                                }
                                 itr++;
                             }
                         }
                     }
-
-
                 }
+
+                if (toAdd){
+                    filesWithMatches.add(path);
+                }
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
