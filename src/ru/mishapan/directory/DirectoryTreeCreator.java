@@ -26,14 +26,4 @@ public class DirectoryTreeCreator {
 
         return folders;
     }
-
-    public static void main(String[] args) {
-        DirectoryTreeCreator tree = new DirectoryTreeCreator();
-        Path path = FileSystems.getDefault().getPath("C:/Users/Михаил/Desktop/findMe");
-        String[] folders = tree.createTree(path);
-
-        for (String str : folders) {
-            System.out.println(str);
-        }
-    }
 }
