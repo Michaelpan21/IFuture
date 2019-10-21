@@ -17,28 +17,36 @@ public class FileFinder {
 
     public List<Path> findFiles(Path path, String glob) {
 
-        List<Path> filesPathList = new ArrayList<>();
+        if (path == null) {
+            throw new NullPointerException();
+        }
+
+        if (glob == null) {
+            glob = "*.log";
+        }
+
+        List<Path> filesList = new ArrayList<>();
 
         try {
             Iterable<Path> stream = Files.newDirectoryStream(path, glob);
-            stream.forEach(filesPathList::add);
+            stream.forEach(filesList::add);
 
         } catch (IOException | DirectoryIteratorException ex) {
             ex.printStackTrace();
         }
 
-        return filesPathList;
+        return filesList;
     }
 
-    public List<Path> findTextInFiles(List<Path> pathList, String text) {
+    public List<Path> findTextInFiles(List<Path> filesList, String text) {
 
-        if (pathList.size() == 0) throw new IllegalArgumentException("No files to search");
+        if (filesList.size() == 0) throw new IllegalArgumentException("No files to search");
 
         char[] textChars = text.toCharArray();
 
         List<Path> filesWithMatches = new ArrayList<>();
 
-        pathList.forEach(path -> {
+        filesList.forEach(path -> {
             try (BufferedReader bf = new BufferedReader(new FileReader(path.toString()))) {
 
                 String fileLine;
@@ -78,7 +86,7 @@ public class FileFinder {
                     }
                 }
 
-                if (toAdd){
+                if (toAdd) {
                     filesWithMatches.add(path);
                 }
 
