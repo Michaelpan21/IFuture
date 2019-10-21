@@ -9,36 +9,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /*TODO
-1) Написать класс, перебирающий файлы в папке
-2) Добавить возможно задавать расширение файлов
+1) кодировка
  */
 public class FileFinder {
 
     public List<Path> findFiles(Path path, String glob) {
 
-        List<Path> pathList = new ArrayList<>();
+        List<Path> filesPathList = new ArrayList<>();
 
         try {
             Iterable<Path> stream = Files.newDirectoryStream(path, glob);
-            stream.forEach(pathList::add);
+            stream.forEach(filesPathList::add);
 
         } catch (IOException | DirectoryIteratorException ex) {
             ex.printStackTrace();
         }
 
-        return pathList;
+        return filesPathList;
     }
 
-    /*
-    Прочитать строку, если найдено частичное совпадение, проверить продолжение в другой строке
-     */
-    public List<Path> findTextInFiles(List<Path> pathList, Pattern pattern) {
+    public List<Path> findTextInFiles(List<Path> pathList, String text) {
 
         if (pathList.size() == 0) throw new IllegalArgumentException("No files to search");
+
+        char[] textChars = text.toCharArray();
 
         List<Path> filesWithMatches = new ArrayList<>();
 
@@ -46,15 +42,46 @@ public class FileFinder {
             try (BufferedReader bf = new BufferedReader(new FileReader(path.toString()))) {
 
                 String fileLine;
+                int itr = 0;
+                boolean toAdd = false;
+
                 while ((fileLine = bf.readLine()) != null) {
 
-                    Matcher matcher = pattern.matcher(fileLine);
+                    char[] fileChars = fileLine.toCharArray();
+                    for (int i = 0; i < fileChars.length; i++) {
 
-                    if (matcher.find()) {
-                        filesWithMatches.add(path);
-                        System.out.println(fileLine);
+                        if (fileChars[i] == textChars[itr]) {
+
+                            itr++;
+                            for (int j = i + 1; j < fileChars.length; j++) {
+
+                                if (fileChars[j] != textChars[itr]) {
+                                    itr = 0;
+                                    break;
+                                }
+
+                                if (itr == textChars.length - 1) {
+                                    i = fileChars.length - 1;
+                                    itr = 0;
+                                    toAdd = true;
+                                    break;
+                                }
+
+                                if (j == fileChars.length - 1) {
+                                    i = fileChars.length - 1;
+                                    itr++;
+                                    break;
+                                }
+                                itr++;
+                            }
+                        }
                     }
                 }
+
+                if (toAdd){
+                    filesWithMatches.add(path);
+                }
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -68,8 +95,10 @@ public class FileFinder {
         FileFinder files = new FileFinder();
         Path path = FileSystems.getDefault().getPath("C:/Users/Михаил/Desktop/findMe");
 
-        Pattern pattern = Pattern.compile("Error 404: Server not found");
-        files.findTextInFiles(files.findFiles(path, "*.log"), pattern);
+        String text = "Error 404: Server not found";
+        List<Path> st = files.findTextInFiles(files.findFiles(path, "*.*"), text);
+
+        st.forEach(System.out::println);
 
     }
 
